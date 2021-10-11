@@ -164,7 +164,7 @@ class Application(ttk.Frame):
         self.enable_buttons()
     def save_file(self):
         if self.savefile == "\U0001f539 Untitled":
-            self.save_file_as()
+            self.save_as_file()
         else:
             qcount.save(file = self.savefile, questions = self.questions, completed = self.completed)
     def save_as_file(self):
