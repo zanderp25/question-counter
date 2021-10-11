@@ -119,10 +119,7 @@ class Application(ttk.Frame):
     def next_question(self):
         if self.question is not None:
             self.completed += [self.question]
-        for question in self.questions:
-            if question not in self.completed:
-                self.question = question
-                break
+        self.find_next()
         self.update_labels()
     def add_completed(self):
         add = [*qcount.parse_input(simpledialog.askstring("Add Completed","Enter questions to add to completed: "))]
@@ -163,7 +160,7 @@ class Application(ttk.Frame):
             return
         self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
         self.questions, self.completed = qcount.load(file = self.savefile)
-        self.next_question()
+        self.find_next()
         self.enable_buttons()
     def save_file(self):
         if self.savefile == "\U0001f539 Untitled":
@@ -176,10 +173,17 @@ class Application(ttk.Frame):
         self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
 
     def update_labels(self):
+        self.find_next()
         self.question_label.config(text="Question: " + str(self.question))
         self.total_label.config(text="Total: " + str(len(self.questions)))
         self.remaining_label.config(text="Remaining: " + str(len(self.questions)-len(self.completed)))
         self.completed_label.config(text="Completed: " + str(len(self.completed)))
+
+    def find_next(self):
+        for question in self.questions:
+            if question not in self.completed:
+                self.question = question
+                break
 
     def undo_action(self):
         ...
