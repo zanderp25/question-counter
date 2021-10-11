@@ -6,7 +6,11 @@ from tkinter import ttk, messagebox, filedialog, simpledialog
 
 # TODO: Add error handling
 # TODO: Finish Save As
+# TODO: Finish Undo and Redo
 # TODO: Add SSH / Password support
+# TODO: Fix keyboard shortcuts
+# TODO: Add Menu Bar item for Questions
+# TODO: Add option to view all questions / completed questions
 
 class Application(ttk.Frame):
     def __init__(self, master:Tk=None):
@@ -140,7 +144,7 @@ class Application(ttk.Frame):
 
     def new_file(self):
         self.savefile = "\U0001f539 Untitled"
-        self.master.title(self.savefile + " - Question Counter")
+        self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
         questions = simpledialog.askstring("New File", "Enter the numbers of the questions:")
         if questions:
             self.questions = qcount.parse_input(questions)
@@ -157,7 +161,7 @@ class Application(ttk.Frame):
         )
         if not self.savefile:
             return
-        self.master.title(self.savefile + " - Question Counter")
+        self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
         self.questions, self.completed = qcount.load(file = self.savefile)
         self.next_question()
         self.enable_buttons()
@@ -165,9 +169,11 @@ class Application(ttk.Frame):
         if self.savefile == "\U0001f539 Untitled":
             self.save_file_as()
         else:
-            save = qcount.save(file = self.savefile, questions = self.questions, completed = self.completed)
+            qcount.save(file = self.savefile, questions = self.questions, completed = self.completed)
     def save_as_file(self):
         self.savefile = filedialog.SaveFileDialog(self,"Save As", ".", "*.json")
+        qcount.save(file = self.savefile, questions = self.questions, completed = self.completed)
+        self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
 
     def update_labels(self):
         self.question_label.config(text="Question: " + str(self.question))
