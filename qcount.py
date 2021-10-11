@@ -1,5 +1,5 @@
-import os, json
-from typing import Tuple
+import os, json, io
+from typing import Tuple, Union
 
 def load(*,file:str="save.json") -> Tuple[list,list]:
     '''Loads the questions and completed questions in the specified file, defaults to `save.json`.
@@ -15,15 +15,21 @@ def load(*,file:str="save.json") -> Tuple[list,list]:
     else:
         return None
 
-def save(questions:list,completed:list,*,file:str="save.json") -> None:
+def save(questions:list,completed:list,*,file:Union[str,io.TextIOWrapper]="save.json") -> None:
     '''Saves the questions and completed questions in the specified file, defaults to `save.json`.'''
     data = {
         'questions':questions,
         'completed':completed,
     }
-    with open(file,'w') as f:
-        json.dump(data,f)
-        f.close()
+    if type(file) == str:
+        with open(file, 'w') as f:
+            json.dump(data, f)
+            f.close()
+    elif type(file) == io.TextIOWrapper:
+        json.dump(data, file)
+        file.close()
+    else:
+        raise TypeError("file must be str or TextIOWrapper")
 
 def parse_input(inp):
     '''Parses the input to a list of numbers. Gets every other number in the range if any of `["even", "odd", "evens", "odds"]` is next.'''

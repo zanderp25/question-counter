@@ -1,3 +1,4 @@
+from io import TextIOWrapper
 import os, json, sys
 import qcount
 
@@ -168,8 +169,8 @@ class Application(ttk.Frame):
         else:
             qcount.save(file = self.savefile, questions = self.questions, completed = self.completed)
     def save_as_file(self):
-        self.savefile = filedialog.asksaveasfile(
-            self,
+        file:TextIOWrapper = filedialog.asksaveasfile(
+            mode = "w",
             title="Save As",
             initialdir=".", 
             filetypes=(("JSON Files","*.json"),("All Files","*.*")), 
