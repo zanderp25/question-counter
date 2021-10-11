@@ -4,8 +4,8 @@ import qcount
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog, simpledialog
 
+# TODO: Fix Save As
 # TODO: Add error handling
-# TODO: Finish Save As
 # TODO: Finish Undo and Redo
 # TODO: Add SSH / Password support
 # TODO: Fix keyboard shortcuts
@@ -168,7 +168,14 @@ class Application(ttk.Frame):
         else:
             qcount.save(file = self.savefile, questions = self.questions, completed = self.completed)
     def save_as_file(self):
-        self.savefile = filedialog.SaveFileDialog(self,"Save As", ".", "*.json")
+        self.savefile = filedialog.asksaveasfile(
+            self,
+            title="Save As",
+            initialdir=".", 
+            filetypes=(("JSON Files","*.json"),("All Files","*.*")), 
+            defaultextension=".json",
+            initialfile="Untitled.json",
+        )
         qcount.save(file = self.savefile, questions = self.questions, completed = self.completed)
         self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
 
