@@ -5,7 +5,6 @@ import qcount
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog, simpledialog
 
-# TODO: Fix Save As
 # TODO: Add error handling
 # TODO: Finish Undo and Redo
 # TODO: Add SSH / Password support
@@ -40,7 +39,8 @@ class Application(ttk.Frame):
 
     def create_menubar(self):
         modifier = "Command" if sys.platform == "darwin" else "Control"
-        self.menubar = Menu(self.master, background='#ff8000', foreground='black', activebackground='white', activeforeground='black')  
+        self.menubar = Menu(self.master, background='#ff8000', foreground='black', activebackground='white', activeforeground='black') 
+
         self.file = Menu(self.menubar, tearoff=1, background='#ffcc99', foreground='black')  
         self.file.add_command(label="New", command=self.new_file, accelerator= modifier + "+N")
         self.file.add_command(label="Open", command=self.open_file, accelerator= modifier + "+O")  
@@ -169,8 +169,7 @@ class Application(ttk.Frame):
         else:
             qcount.save(file = self.savefile, questions = self.questions, completed = self.completed)
     def save_as_file(self):
-        file:TextIOWrapper = filedialog.asksaveasfile(
-            mode = "w",
+        self.savefile = filedialog.asksaveasfilename(
             title="Save As",
             initialdir=".", 
             filetypes=(("JSON Files","*.json"),("All Files","*.*")), 
