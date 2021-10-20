@@ -5,6 +5,7 @@ import qcount
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog, simpledialog
 
+# TODO: Finish Button functions
 # TODO: Add error handling
 # TODO: Finish Undo and Redo
 # TODO: Add SSH / Password support
@@ -41,7 +42,7 @@ class Application(ttk.Frame):
         modifier = "Command" if sys.platform == "darwin" else "Control"
         self.menubar = Menu(self.master, background='#ff8000', foreground='black', activebackground='white', activeforeground='black') 
 
-        self.file = Menu(self.menubar, tearoff=1, background='#ffcc99', foreground='black')  
+        self.file = Menu(self.menubar, tearoff=0)  
         self.file.add_command(label="New", command=self.new_file, accelerator= modifier + "+N")
         self.file.add_command(label="Open", command=self.open_file, accelerator= modifier + "+O")  
         self.file.add_command(label="Save", command=self.save_file, accelerator= modifier + "+S")  
@@ -162,7 +163,9 @@ class Application(ttk.Frame):
         self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
         self.questions, self.completed = qcount.load(file = self.savefile)
         self.find_next()
+        self.update_labels()
         self.enable_buttons()
+        self.master.focus_force()
     def save_file(self):
         if self.savefile == "\U0001f539 Untitled":
             self.save_as_file()
