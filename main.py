@@ -9,7 +9,6 @@ from tkinter import ttk, messagebox, filedialog, simpledialog
 # TODO: Add error handling
 # TODO: Finish Undo and Redo
 # TODO: Add SSH / Password support
-# TODO: Fix keyboard shortcuts
 # TODO: Add Menu Bar item for Questions
 # TODO: Add option to view all questions / completed questions
 
@@ -40,24 +39,30 @@ class Application(ttk.Frame):
 
     def create_menubar(self):
         modifier = "Command" if sys.platform == "darwin" else "Control"
-        self.menubar = Menu(self.master, background='#ff8000', foreground='black', activebackground='white', activeforeground='black') 
+        self.menubar = Menu(self.master)
 
         self.file = Menu(self.menubar, tearoff=0)  
         self.file.add_command(label="New", command=self.new_file, accelerator= modifier + "+N")
-        self.file.add_command(label="Open", command=self.open_file, accelerator= modifier + "+O")  
-        self.file.add_command(label="Save", command=self.save_file, accelerator= modifier + "+S")  
-        self.file.add_command(label="Save as", command=self.save_as_file, accelerator= modifier + "+Shift+S")    
+        self.master.bind_all(f"<{modifier}-n>", lambda a: self.new_file())
+        self.file.add_command(label="Open", command=self.open_file, accelerator= modifier + "+O")
+        self.master.bind_all(f"<{modifier}-o>", lambda a: self.open_file())
+        self.file.add_command(label="Save", command=self.save_file, accelerator= modifier + "+S")
+        self.master.bind_all(f"<{modifier}-s>", lambda a: self.save_file())
+        self.file.add_command(label="Save as", command=self.save_as_file, accelerator= modifier + "+Shift+S")
+        self.master.bind_all(f"<{modifier}-S>", lambda a: self.save_as_file())
         self.file.add_separator()
         self.menubar.add_cascade(label="File", menu=self.file)  
 
         self.edit = Menu(self.menubar, tearoff=0)  
-        self.edit.add_command(label="Undo", command=self.undo_action, accelerator= modifier + "+Z", state=DISABLED)  
-        self.edit.add_command(label="Redo", command=self.redo_action, accelerator= modifier + "+Y", state=DISABLED)  
+        self.edit.add_command(label="Undo", command=self.undo_action, accelerator= modifier + "+Z", state=DISABLED)
+        self.master.bind_all(f"<{modifier}-z>", lambda a: self.undo_action())
+        self.edit.add_command(label="Redo", command=self.redo_action, accelerator= modifier + "+Y", state=DISABLED)
+        self.master.bind_all(f"<{modifier}-y>", lambda a: self.redo_action())
         self.edit.add_separator()     
-        self.edit.add_command(label="Cut", accelerator= modifier + "+X")  
-        self.edit.add_command(label="Copy", accelerator= modifier + "+C")  
-        self.edit.add_command(label="Paste", accelerator= modifier + "+V")  
-        self.edit.add_command(label="Select All", accelerator= modifier + "+A")  
+        self.edit.add_command(label="Cut", accelerator= modifier + "+X")
+        self.edit.add_command(label="Copy", accelerator= modifier + "+C")
+        self.edit.add_command(label="Paste", accelerator= modifier + "+V")
+        self.edit.add_command(label="Select All", accelerator= modifier + "+A")
         self.menubar.add_cascade(label="Edit", menu=self.edit)  
 
         self.help = Menu(self.menubar, tearoff=0)  
@@ -142,13 +147,13 @@ class Application(ttk.Frame):
         messagebox.showinfo("About", "This is a Question Counter")
 
     def new_file(self):
-        self.savefile = "\U0001f539 Untitled"
-        self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
         questions = simpledialog.askstring("New File", "Enter the numbers of the questions:")
         if questions:
             self.questions = qcount.parse_input(questions)
-        self.update_labels()
-        self.enable_buttons()
+            self.savefile = "\U0001f539 Untitled"
+            self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
+            self.update_labels()
+            self.enable_buttons()
     def open_file(self):
         self.savefile = filedialog.askopenfilename(
             initialdir = ".",
@@ -162,8 +167,7 @@ class Application(ttk.Frame):
             return
         self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
         self.questions, self.completed = qcount.load(file = self.savefile)
-        self.find_next()
-        self.update_labels()
+        self.next_question()
         self.enable_buttons()
         self.master.focus_force()
     def save_file(self):
