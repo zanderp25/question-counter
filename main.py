@@ -1,16 +1,17 @@
 from io import TextIOWrapper
 import os, json, sys
+from typing import Literal, Union
 import qcount
 
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog, simpledialog
 
-# TODO: Finish Button functions
 # TODO: Add error handling
 # TODO: Finish Undo and Redo
 # TODO: Add SSH / Password support
 # TODO: Add Menu Bar item for Questions
 # TODO: Add option to view all questions / completed questions
+# TODO: Parse input with spaces before and after dashes
 
 class Application(ttk.Frame):
     def __init__(self, master:Tk=None):
@@ -134,14 +135,23 @@ class Application(ttk.Frame):
             if not item in self.completed:
                 self.completed += [item]
         self.update_labels()
-    def edit_completed(self):
-        ...
-    def add_questions(self):
-        ...
-    def edit_questions(self):
-        ...
+        self.master.focus_force()
     def reset_completed(self):
-        ...
+        if messagebox.askyesno("Reset Completed","Are you sure you want to reset completed?"):
+            self.completed = []
+            self.update_labels()
+        self.master.focus_force()
+    def add_questions(self):
+        add = [*qcount.parse_input(simpledialog.askstring("Add Questions","Enter questions to add to questions: "))]
+        for item in add:
+            if not item in self.questions:
+                self.questions += [item]
+        self.update_labels()
+        self.master.focus_force()
+    def edit_questions(self):
+        self.toplevel = Editor(master=Toplevel(), root = self, completed=False)
+    def edit_completed(self):
+        self.toplevel = Editor(master=Toplevel(), root = self, completed=True)
 
     def about(self):
         messagebox.showinfo("About", "This is a Question Counter")
@@ -204,6 +214,68 @@ class Application(ttk.Frame):
     def redo_action(self):
         ...
 
-root = Tk()
-app = Application(master=root)
+class Editor(ttk.Frame):
+    def __init__(self, master:Toplevel, root:Application, completed:bool):
+        super().__init__(master)
+        self.master = master
+        self.completed = completed
+        self.root = root
+        self.pack(fill="both", expand=True)
+        self.values = StringVar()
+        if not self.completed:
+            self.values.set("\n".join([str(e) for e in self.root.questions]))
+            self.master.title("Edit Questions")
+        else:
+            self.values.set("\n".join([str(e) for e in self.root.completed]))
+            self.master.title("Edit Completed")
+        self.create_widgets()
+        self.master.focus_force()
+    
+    def create_widgets(self):
+        self.listframe = ttk.Frame(self)
+        self.listframe.pack(side="top", fill="both", expand=True)
+        self.list = Listbox(self.listframe, width=40, height=10, listvariable=self.values, selectmode=EXTENDED)
+        self.list.pack(side="left", fill="both", expand=True)
+        self.scrollbar = ttk.Scrollbar(self.listframe, orient="vertical", command=self.list.yview)
+        self.scrollbar.pack(side="right", fill="y")
+        self.list.config(yscrollcommand=self.scrollbar.set)
+        self.button_frame = ttk.Frame(self)
+        self.button_frame.pack(side="bottom", padx=5, pady=5, fill="x", expand=True)
+        self.add_button = ttk.Button(self.button_frame, text="Add", command=self.add)
+        self.add_button.pack(side="left", fill="x", expand=True)
+        self.remove_button = ttk.Button(self.button_frame, text="Remove", command=self.remove)
+        self.remove_button.pack(side="left", fill="x", expand=True)
+        self.cancel_button = ttk.Button(self.button_frame, text="Cancel", command=self.cancel)
+        self.cancel_button.pack(side="left", fill="x", expand=True)
+        self.ok_button = ttk.Button(self.button_frame, text="OK", command=self.ok)
+        self.ok_button.pack(side="left", fill="x", expand=True)
+
+    def add(self):
+        nlist = (list(eval(self.values.get())) if len(self.values.get()) > 0 else [])
+        add = [*qcount.parse_input(simpledialog.askstring("Add Questions","Enter questions to add to questions: "))]
+        for item in add:
+            if not item in nlist:
+                nlist += [item]
+        self.values.set("\n".join([str(e) for e in nlist]))
+        self.list.yview_moveto(1)
+        self.list.focus_force()
+    def remove(self):
+        if len(self.list.curselection()) == 0:
+            return
+        oldlist = eval(self.values.get())
+        newlist = [item for item in oldlist if item not in [oldlist[i] for i in self.list.curselection()]]
+        self.values.set("\n".join(newlist))
+    def cancel(self):
+        self.master.destroy()
+    def ok(self):
+        if not self.completed:
+            self.root.questions = [int(e) for e in list(eval(self.values.get()))]
+        else:
+            self.root.completed = [int(e) for e in list(eval(self.values.get()))]
+        self.root.update_labels()
+        self.root.master.focus_force()
+        self.master.destroy()
+
+
+app = Application(master=Tk())
 app.mainloop()
