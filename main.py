@@ -126,7 +126,8 @@ class Application(ttk.Frame):
 
     def next_question(self):
         if self.question is not None:
-            self.completed += [self.question]
+            if not self.question in self.completed:
+                self.completed += [self.question]
         self.find_next()
         self.update_labels()
     def add_completed(self):
