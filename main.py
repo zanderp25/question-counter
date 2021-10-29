@@ -9,8 +9,6 @@ from tkinter import ttk, messagebox, filedialog, simpledialog
 # TODO: Add error handling
 # TODO: Finish Undo and Redo
 # TODO: Add SSH / Password support
-# TODO: Add Menu Bar item for Questions
-# TODO: Add option to view all questions / completed questions
 # TODO: Parse input with spaces before and after dashes
 
 class Application(ttk.Frame):
@@ -29,12 +27,7 @@ class Application(ttk.Frame):
         self.create_menubar()
         self.create_widgets()
         self.buttons = [
-            self.next_button, 
-            self.add_completed_button, 
-            self.edit_completed_button, 
-            self.add_questions_button, 
-            self.edit_questions_button, 
-            self.reset_completed_button
+            self.next_button
         ]
         self.disable_buttons() # Disable buttons when no questions are loaded
 
@@ -66,6 +59,23 @@ class Application(ttk.Frame):
         self.edit.add_command(label="Select All", accelerator= modifier + "+A")
         self.menubar.add_cascade(label="Edit", menu=self.edit)  
 
+        self.questions_menu = Menu(self.menubar, tearoff=0)
+        self.questions_menu.add_command(label="Next Question", command=self.next_question, accelerator= "Return" if sys.platform == "darwin" else "Enter")
+        self.master.bind_all("<Return>", lambda a: self.next_question())
+        self.questions_menu.add_command(label="Add Questions", command=self.add_questions, accelerator= modifier + "+M")
+        self.master.bind_all(f"<{modifier}-m>", lambda a: self.add_questions())
+        self.questions_menu.add_command(label="Edit Questions", command=self.edit_questions, accelerator= modifier + "+E")
+        self.master.bind_all(f"<{modifier}-e>", lambda a: self.edit_questions())
+        self.questions_menu.add_separator()
+        self.questions_menu.add_command(label="Add Completed", command=self.add_completed, accelerator= modifier + "+Shift+M")
+        self.master.bind_all(f"<{modifier}-Shift-m>", lambda a: self.add_completed())
+        self.questions_menu.add_command(label="Edit Completed", command=self.edit_completed, accelerator= modifier + "+Shift+E")
+        self.master.bind_all(f"<{modifier}-Shift-e>", lambda a: self.edit_completed())
+        self.questions_menu.add_separator()
+        self.questions_menu.add_command(label="Reset Completed", command=self.reset_completed, accelerator= modifier + "+R")
+        self.master.bind_all(f"<{modifier}-r>", lambda a: self.reset_completed())
+        self.menubar.add_cascade(label="Questions", menu=self.questions_menu)
+
         self.help = Menu(self.menubar, tearoff=0)  
         self.help.add_command(label="About", command=self.about)  
         self.menubar.add_cascade(label="Help", menu=self.help) 
@@ -94,28 +104,6 @@ class Application(ttk.Frame):
 
         self.next_button = ttk.Button(self.button_frame1, text="Next", command=self.next_question)
         self.next_button.pack(side="left", padx=5, pady=5, fill="x", expand=True)
-
-        self.button_frame2 = ttk.Frame(self)
-        self.button_frame2.pack(fill="x", expand=True)
-
-        self.add_completed_button = ttk.Button(self.button_frame2, text="Add Completed", command=self.add_completed)
-        self.add_completed_button.pack(side="left", padx=5, pady=5, fill="x", expand=True)
-        self.edit_completed_button = ttk.Button(self.button_frame2, text="Edit Completed", command=self.edit_completed)
-        self.edit_completed_button.pack(side="left", padx=5, pady=5, fill="x", expand=True)
-
-        self.button_frame3 = ttk.Frame(self)
-        self.button_frame3.pack(fill="x", expand=True)
-
-        self.add_questions_button = ttk.Button(self.button_frame3, text="Add Questions", command=self.add_questions)
-        self.add_questions_button.pack(side="left", padx=5, pady=5, fill="x", expand=True)
-        self.edit_questions_button = ttk.Button(self.button_frame3, text="Edit Questions", command=self.edit_questions)
-        self.edit_questions_button.pack(side="left", padx=5, pady=5, fill="x", expand=True)
-
-        self.button_frame4 = ttk.Frame(self)
-        self.button_frame4.pack(fill="x", expand=True)
-
-        self.reset_completed_button = ttk.Button(self.button_frame4, text="Reset Completed", command=self.reset_completed)
-        self.reset_completed_button.pack(side="left", padx=5, pady=5, fill="x", expand=True)
 
     def disable_buttons(self):
         for button in self.buttons:
