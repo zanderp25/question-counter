@@ -62,6 +62,7 @@ class Application(ttk.Frame):
         self.questions_menu = Menu(self.menubar, tearoff=0)
         self.questions_menu.add_command(label="Next Question", command=self.next_question, accelerator= "Return" if sys.platform == "darwin" else "Enter")
         self.master.bind_all("<Return>", lambda a: self.next_question())
+        self.questions_menu.add_separator()
         self.questions_menu.add_command(label="Add Questions", command=self.add_questions, accelerator= modifier + "+M")
         self.master.bind_all(f"<{modifier}-m>", lambda a: self.add_questions())
         self.questions_menu.add_command(label="Edit Questions", command=self.edit_questions, accelerator= modifier + "+E")
