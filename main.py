@@ -6,23 +6,25 @@ import qcount
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog, simpledialog
 
-# TODO: Add error handling
 # TODO: Finish Undo and Redo
-# TODO: Add SSH / Password support
+#      - make function for updating undo/redo history and buttons
+# TODO: Add a progress bar
 # TODO: Parse input with spaces before and after dashes
+# TODO: Add error handling
+# TODO: Add SSH / Password support
 
 class Application(ttk.Frame):
     def __init__(self, master:Tk=None):
         super().__init__(master)
         self.master:Tk = master
         self.master.title("Question Counter")
-        # self.master.geometry("400x400")
+        self.master.geometry("250x100")
         self.pack(fill="both", expand=True)
         self.question = None
         self.questions = []
         self.completed = []
-        self.undid = {"completed": [], "questions": []}
-        self.redid = {"completed": [], "questions": []}
+        self.undo_history = []
+        self.redo_history = []
         self.savefile = None
         self.create_menubar()
         self.create_widgets()
@@ -60,8 +62,8 @@ class Application(ttk.Frame):
         self.menubar.add_cascade(label="Edit", menu=self.edit)  
 
         self.questions_menu = Menu(self.menubar, tearoff=0)
-        self.questions_menu.add_command(label="Next Question", command=self.next_question, accelerator= "Return" if sys.platform == "darwin" else "Enter")
-        self.master.bind_all("<Return>", lambda a: self.next_question())
+        self.questions_menu.add_command(label="Next Question", command=self.next_on_click, accelerator= "Return" if sys.platform == "darwin" else "Enter")
+        self.master.bind_all("<Return>", lambda a: self.next_on_click())
         self.questions_menu.add_separator()
         self.questions_menu.add_command(label="Add Questions", command=self.add_questions, accelerator= modifier + "+M")
         self.master.bind_all(f"<{modifier}-m>", lambda a: self.add_questions())
@@ -103,32 +105,41 @@ class Application(ttk.Frame):
         self.button_frame1 = ttk.Frame(self)
         self.button_frame1.pack(fill="x", expand=True)
 
-        self.next_button = ttk.Button(self.button_frame1, text="Next", command=self.next_question)
+        self.next_button = ttk.Button(self.button_frame1, text="Next", command=self.next_on_click)
         self.next_button.pack(side="left", padx=5, pady=5, fill="x", expand=True)
 
     def disable_buttons(self):
         for button in self.buttons:
             button.config(state=DISABLED)
+        self.menubar.entryconfig("Questions", state=DISABLED)
     def enable_buttons(self):
         for button in self.buttons:
             button.config(state=NORMAL)
+        self.menubar.entryconfig("Questions", state=NORMAL)
+
+    def next_on_click(self):
+        self.add_undo()
+        self.next_question()
 
     def next_question(self):
+        self.undo_history += [{"questions": self.questions, "completed": self.completed}]
         if self.question is not None:
-            if not self.question in self.completed:
+            if not self.question in self.completed and self.question != None:
                 self.completed += [self.question]
-        self.find_next()
         self.update_labels()
+
     def add_completed(self):
         add = [*qcount.parse_input(simpledialog.askstring("Add Completed","Enter questions to add to completed: "))]
         for item in add:
             if not item in self.completed:
                 self.completed += [item]
         self.update_labels()
+        self.add_undo()
         self.master.focus_force()
     def reset_completed(self):
         if messagebox.askyesno("Reset Completed","Are you sure you want to reset completed?"):
             self.completed = []
+            self.add_undo()
             self.update_labels()
         self.master.focus_force()
     def add_questions(self):
@@ -136,6 +147,7 @@ class Application(ttk.Frame):
         for item in add:
             if not item in self.questions:
                 self.questions += [item]
+        self.add_undo()
         self.update_labels()
         self.master.focus_force()
     def edit_questions(self):
@@ -150,8 +162,10 @@ class Application(ttk.Frame):
         questions = simpledialog.askstring("New File", "Enter the numbers of the questions:")
         if questions:
             self.questions = qcount.parse_input(questions)
+            self.completed = []
             self.savefile = "\U0001f539 Untitled"
             self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
+            self.clear_history()
             self.update_labels()
             self.enable_buttons()
     def open_file(self):
@@ -167,6 +181,7 @@ class Application(ttk.Frame):
             return
         self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
         self.questions, self.completed = qcount.load(file = self.savefile)
+        self.clear_history()
         self.next_question()
         self.enable_buttons()
         self.master.focus_force()
@@ -185,6 +200,7 @@ class Application(ttk.Frame):
         )
         qcount.save(file = self.savefile, questions = self.questions, completed = self.completed)
         self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
+        self.master.focus_force()
 
     def update_labels(self):
         self.find_next()
@@ -198,11 +214,43 @@ class Application(ttk.Frame):
             if question not in self.completed:
                 self.question = question
                 break
+        else:
+            self.question = None
 
     def undo_action(self):
-        ...
+        print(self.undo_history)
+        if len(self.undo_history) > 0:
+            self.redo_history += [{"questions":self.questions, "completed":self.completed}]
+            self.edit.entryconfig("Redo", state=NORMAL)
+            action = self.undo_history[-1]
+            self.completed = action["completed"]
+            self.questions = action["questions"]
+        self.undo_history = self.undo_history[:-1]
+        if len(self.undo_history) == 0:
+            self.edit.entryconfig("Undo", state=DISABLED)
+        self.update_labels()
     def redo_action(self):
-        ...
+        if len(self.redo_history) > 0:
+            self.undo_history += [{"questions":self.questions, "completed":self.completed}]
+            action = self.redo_history[-1]
+            self.completed = action["completed"]
+            self.questions = action["questions"]
+        self.redo_history = self.redo_history[:-1]
+        if len(self.redo_history) == 0:
+            self.edit.entryconfig("Redo", state=DISABLED)
+        self.update_labels()
+
+    def add_undo(self):
+        self.undo_history += [{"questions":self.questions, "completed":self.completed}]
+        self.edit.entryconfig("Undo", state=NORMAL)
+        self.redo_history = []
+        self.edit.entryconfig("Redo", state=DISABLED)
+
+    def clear_history(self):
+        self.undo_history = []
+        self.redo_history = []
+        self.edit.entryconfig("Undo", state=DISABLED)
+        self.edit.entryconfig("Redo", state=DISABLED)
 
 class Editor(ttk.Frame):
     def __init__(self, master:Toplevel, root:Application, completed:bool):
@@ -213,31 +261,36 @@ class Editor(ttk.Frame):
         self.pack(fill="both", expand=True)
         self.values = StringVar()
         if not self.completed:
-            self.values.set("\n".join([str(e) for e in self.root.questions]))
+            val = self.root.questions
             self.master.title("Edit Questions")
         else:
-            self.values.set("\n".join([str(e) for e in self.root.completed]))
+            val = self.root.completed
             self.master.title("Edit Completed")
+        val.sort()
+        self.values.set("\n".join([str(e) for e in val]))
+        self.oldcount = self.root.questions if not self.completed else self.root.completed
         self.create_widgets()
         self.master.focus_force()
     
     def create_widgets(self):
         self.listframe = ttk.Frame(self)
         self.listframe.pack(side="top", fill="both", expand=True)
-        self.list = Listbox(self.listframe, width=40, height=10, listvariable=self.values, selectmode=EXTENDED)
+        self.list = Listbox(self.listframe, width=20, height=10, listvariable=self.values, selectmode=EXTENDED)
         self.list.pack(side="left", fill="both", expand=True)
         self.scrollbar = ttk.Scrollbar(self.listframe, orient="vertical", command=self.list.yview)
         self.scrollbar.pack(side="right", fill="y")
         self.list.config(yscrollcommand=self.scrollbar.set)
         self.button_frame = ttk.Frame(self)
-        self.button_frame.pack(side="bottom", padx=5, pady=5, fill="x", expand=True)
+        self.button_frame.pack(side="top", padx=5, pady=5, fill="x", expand=True)
         self.add_button = ttk.Button(self.button_frame, text="Add", command=self.add)
         self.add_button.pack(side="left", fill="x", expand=True)
         self.remove_button = ttk.Button(self.button_frame, text="Remove", command=self.remove)
         self.remove_button.pack(side="left", fill="x", expand=True)
-        self.cancel_button = ttk.Button(self.button_frame, text="Cancel", command=self.cancel)
+        self.button_frame2 = ttk.Frame(self)
+        self.button_frame2.pack(side="top", padx=5, pady=5, fill="x", expand=True)
+        self.cancel_button = ttk.Button(self.button_frame2, text="Cancel", command=self.cancel)
         self.cancel_button.pack(side="left", fill="x", expand=True)
-        self.ok_button = ttk.Button(self.button_frame, text="OK", command=self.ok)
+        self.ok_button = ttk.Button(self.button_frame2, text="OK", command=self.ok)
         self.ok_button.pack(side="left", fill="x", expand=True)
 
     def add(self):
@@ -263,9 +316,9 @@ class Editor(ttk.Frame):
         else:
             self.root.completed = [int(e) for e in list(eval(self.values.get()))]
         self.root.update_labels()
+        self.root.add_undo()
         self.root.master.focus_force()
         self.master.destroy()
-
 
 app = Application(master=Tk())
 app.mainloop()
