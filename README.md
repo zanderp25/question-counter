@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="#"><img src="#" alt="Question Counter" width="200"></a>
+  <a href="https://github.com/zanderp25/question-counter/"><img src="https://github.com/zanderp25/question-counter/blob/master/img/screenshot.png" alt="Question Counter" width="200"></a>
   <br>
     Question Counter
   <br>
@@ -28,7 +28,7 @@
   <a href="#download">Download</a>
 </p>
 
-![screenshot](https://raw.githubusercontent.com/zanderp25/question-counter/img/screenshot.png)
+![screenshot](https://github.com/zanderp25/question-counter/blob/master/img/screenshot.png)
 
 ## About
 
