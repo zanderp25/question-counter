@@ -6,9 +6,12 @@ import qcount
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog, simpledialog
 
+# TODO: Disable save and save as when nothing is loaded
 # TODO: Finish Undo and Redo
 #      - make function for updating undo/redo history and buttons
 # TODO: Add a progress bar
+# TODO: make about page look nicer
+#      - maybe add html viewer or something
 # TODO: Parse input with spaces before and after dashes
 # TODO: Add error handling
 # TODO: Add SSH / Password support
