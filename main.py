@@ -6,11 +6,8 @@ import qcount
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog, simpledialog
 
-# TODO: Disable save and save as when nothing is loaded
-# TODO: Make an unsaved work quwstion prompt
-# TODO: Finish Undo and Redo
-#      - make function for updating undo/redo history and buttons
 # TODO: Add a progress bar
+# TODO: Filter duplicates
 # TODO: make about page look nicer
 #      - maybe add html viewer or something
 # TODO: implement preferences menu button on macOS
@@ -25,12 +22,14 @@ class Application(ttk.Frame):
         self.master.title("Question Counter")
         self.master.geometry("250x100")
         self.pack(fill="both", expand=True)
+        self.master.protocol("WM_DELETE_WINDOW", self.on_quit)
         self.question = None
         self.questions = []
         self.completed = []
         self.undo_history = []
         self.redo_history = []
         self.savefile = None
+        self.saved = True
         self.create_menubar()
         self.create_widgets()
         self.buttons = [
@@ -38,7 +37,20 @@ class Application(ttk.Frame):
         ]
         self.disable_buttons() # Disable buttons when no questions are loaded
 
-    def create_menubar(self):
+    def on_quit(self) -> None:
+        if not self.saved:
+            e = messagebox.askyesnocancel("Quit", "Do you want to save before quitting?")
+            if e == True:
+                self.save_file()
+                self.master.destroy()
+            elif e == False:
+                self.master.destroy()
+            else:
+                pass
+        else:
+            self.master.destroy()
+
+    def create_menubar(self) -> None:
         modifier = "Command" if sys.platform == "darwin" else "Control"
         self.menubar = Menu(self.master)
 
@@ -90,7 +102,7 @@ class Application(ttk.Frame):
 
         self.master.config(menu=self.menubar)
 
-    def create_widgets(self):
+    def create_widgets(self) -> None:
         self.question_frame1 = ttk.Frame(self)
         self.question_frame1.pack(fill="both", expand=True)
 
@@ -117,17 +129,20 @@ class Application(ttk.Frame):
         for button in self.buttons:
             button.config(state=DISABLED)
         self.menubar.entryconfig("Questions", state=DISABLED)
+        self.file.entryconfig("Save", state=DISABLED)
+        self.file.entryconfig("Save as", state=DISABLED)
     def enable_buttons(self):
         for button in self.buttons:
             button.config(state=NORMAL)
         self.menubar.entryconfig("Questions", state=NORMAL)
+        self.file.entryconfig("Save", state=NORMAL)
+        self.file.entryconfig("Save as", state=NORMAL)
 
     def next_on_click(self):
         self.add_undo()
         self.next_question()
 
     def next_question(self):
-        self.undo_history += [{"questions": self.questions, "completed": self.completed}]
         if self.question is not None:
             if not self.question in self.completed and self.question != None:
                 self.completed += [self.question]
@@ -186,6 +201,7 @@ class Application(ttk.Frame):
             return
         self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
         self.questions, self.completed = qcount.load(file = self.savefile)
+        self.saved = True
         self.clear_history()
         self.next_question()
         self.enable_buttons()
@@ -195,6 +211,7 @@ class Application(ttk.Frame):
             self.save_as_file()
         else:
             qcount.save(file = self.savefile, questions = self.questions, completed = self.completed)
+        self.saved = True
     def save_as_file(self):
         self.savefile = filedialog.asksaveasfilename(
             title="Save As",
@@ -205,6 +222,7 @@ class Application(ttk.Frame):
         )
         qcount.save(file = self.savefile, questions = self.questions, completed = self.completed)
         self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
+        self.saved = True
         self.master.focus_force()
 
     def update_labels(self):
@@ -223,9 +241,8 @@ class Application(ttk.Frame):
             self.question = None
 
     def undo_action(self):
-        print(self.undo_history)
         if len(self.undo_history) > 0:
-            self.redo_history += [{"questions":self.questions, "completed":self.completed}]
+            self.redo_history += [{"questions":list(self.questions), "completed":list(self.completed)}]
             self.edit.entryconfig("Redo", state=NORMAL)
             action = self.undo_history[-1]
             self.completed = action["completed"]
@@ -236,7 +253,8 @@ class Application(ttk.Frame):
         self.update_labels()
     def redo_action(self):
         if len(self.redo_history) > 0:
-            self.undo_history += [{"questions":self.questions, "completed":self.completed}]
+            self.undo_history += [{"questions":list(self.questions), "completed":list(self.completed)}]
+            self.edit.entryconfig("Undo", state=NORMAL)
             action = self.redo_history[-1]
             self.completed = action["completed"]
             self.questions = action["questions"]
@@ -246,12 +264,11 @@ class Application(ttk.Frame):
         self.update_labels()
 
     def add_undo(self):
-        print(self.undo_history)
-        self.undo_history += [{"questions":self.questions, "completed":self.completed}]
-        print(self.undo_history)
+        self.undo_history += [{"questions":list(self.questions), "completed":list(self.completed)}]
         self.edit.entryconfig("Undo", state=NORMAL)
         self.redo_history = []
         self.edit.entryconfig("Redo", state=DISABLED)
+        self.saved = False
 
     def clear_history(self):
         self.undo_history = []
