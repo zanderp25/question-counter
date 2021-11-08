@@ -7,11 +7,13 @@ from tkinter import *
 from tkinter import ttk, messagebox, filedialog, simpledialog
 
 # TODO: Disable save and save as when nothing is loaded
+# TODO: Make an unsaved work quwstion prompt
 # TODO: Finish Undo and Redo
 #      - make function for updating undo/redo history and buttons
 # TODO: Add a progress bar
 # TODO: make about page look nicer
 #      - maybe add html viewer or something
+# TODO: implement preferences menu button on macOS
 # TODO: Parse input with spaces before and after dashes
 # TODO: Add error handling
 # TODO: Add SSH / Password support
@@ -244,7 +246,9 @@ class Application(ttk.Frame):
         self.update_labels()
 
     def add_undo(self):
+        print(self.undo_history)
         self.undo_history += [{"questions":self.questions, "completed":self.completed}]
+        print(self.undo_history)
         self.edit.entryconfig("Undo", state=NORMAL)
         self.redo_history = []
         self.edit.entryconfig("Redo", state=DISABLED)
