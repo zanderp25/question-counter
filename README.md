@@ -6,7 +6,7 @@
   <br>
 </h1>
 
-<h4 align="center">A simple desktop app to keep track of which question you are on on your homework.</h4>
+<h4 align="center">A simple desktop app to help keep you motivated and count  questions.</h4>
 
 <p align="center">
   <a href="#about">About</a> •
