@@ -10,8 +10,8 @@ from tkinter import ttk, messagebox, filedialog, simpledialog
 # TODO: Filter duplicates
 # TODO: make about page look nicer
 #      - maybe add html viewer or something
-# TODO: implement preferences menu button on macOS
 # TODO: Parse input with spaces before and after dashes
+# TODO: add other languages maybe
 # TODO: Add error handling
 # TODO: Add SSH / Password support
 
@@ -71,12 +71,15 @@ class Application(ttk.Frame):
         self.master.bind_all(f"<{modifier}-s>", lambda a: self.save_file())
         self.file.add_command(label="Save as", command=self.save_as_file, accelerator= modifier + "+Shift+S")
         self.master.bind_all(f"<{modifier}-S>", lambda a: self.save_as_file())
-        # if sys.platform == "darwin":
-        #     self.master.createcommand('tk::mac::ShowPreferences', self.preferences)
-        # else:
-        #     self.file.add_separator()
-        #     self.file.add_command(label="Preferences", command=self.preferences, accelerator= modifier + "+,")
-        #     self.master.bind_all(f"<{modifier}-comma>", lambda a: self.preferences())
+        if sys.platform == "darwin":
+            self.master.createcommand('tk::mac::ShowPreferences', self.preferences)
+        else:
+            self.file.add_separator()
+            self.file.add_command(label="Preferences", command=self.preferences, accelerator= modifier + "+,")
+            self.master.bind_all(f"<{modifier}-comma>", lambda a: self.preferences())
+            self.file.add_separator()
+            self.file.add_command(label="Quit", command=self.on_quit, accelerator= modifier + "+Q")
+            self.master.bind_all(f"<{modifier}-q>", lambda a: self.on_quit())
         self.menubar.add_cascade(label="File", menu=self.file)  
 
         self.edit = Menu(self.menubar, tearoff=0)  
@@ -203,8 +206,13 @@ class Application(ttk.Frame):
         self.master.focus_force()
 
     def help_menu(self):
+        link = "https://github.com/zanderp25/question-counter/blob/main/README.md"
         if sys.platform == "darwin":
-            os.system('open "https://github.com/zanderp25/question-counter/docs/"')
+            os.system(f'open "{link}"')
+        if sys.platform == "win32":
+            os.system(f'start "{link}"') # not sure if this works
+        if sys.platform == "linux":
+            os.system(f'xdg-open "{link}"')
         else:
             messagebox.showinfo("Help", "Mmmmmm... no.")
         self.master.focus_force()
