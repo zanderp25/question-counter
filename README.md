@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://github.com/zanderp25/question-counter/"><img src="https://github.com/zanderp25/question-counter/blob/master/img/screenshot.png" alt="Question Counter" width="200"></a>
+  <a href="https://question-counter.zanderp25.com/"><img src="https://github.com/zanderp25/question-counter/blob/master/img/screenshot.png" alt="Question Counter" width="200"></a>
   <br>
     Question Counter
   <br>
