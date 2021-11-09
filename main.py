@@ -20,9 +20,12 @@ class Application(ttk.Frame):
         super().__init__(master)
         self.master:Tk = master
         self.master.title("Question Counter")
-        self.master.geometry("250x100")
+        self.master.geometry("250x115")
+        self.master.resizable(False, False)
         self.pack(fill="both", expand=True)
         self.master.protocol("WM_DELETE_WINDOW", self.on_quit)
+        if sys.platform == "darwin":
+            self.master.createcommand('tk::mac::Quit', self.on_quit)
         self.question = None
         self.questions = []
         self.completed = []
@@ -54,6 +57,11 @@ class Application(ttk.Frame):
         modifier = "Command" if sys.platform == "darwin" else "Control"
         self.menubar = Menu(self.master)
 
+        if sys.platform == "darwin":
+            self.appmenu = Menu(self.menubar, name='apple')
+            self.menubar.add_cascade(menu=self.appmenu)
+            self.appmenu.add_command(label='About My Application', command=self.about)
+
         self.file = Menu(self.menubar, tearoff=0)  
         self.file.add_command(label="New", command=self.new_file, accelerator= modifier + "+N")
         self.master.bind_all(f"<{modifier}-n>", lambda a: self.new_file())
@@ -63,7 +71,12 @@ class Application(ttk.Frame):
         self.master.bind_all(f"<{modifier}-s>", lambda a: self.save_file())
         self.file.add_command(label="Save as", command=self.save_as_file, accelerator= modifier + "+Shift+S")
         self.master.bind_all(f"<{modifier}-S>", lambda a: self.save_as_file())
-        self.file.add_separator()
+        # if sys.platform == "darwin":
+        #     self.master.createcommand('tk::mac::ShowPreferences', self.preferences)
+        # else:
+        #     self.file.add_separator()
+        #     self.file.add_command(label="Preferences", command=self.preferences, accelerator= modifier + "+,")
+        #     self.master.bind_all(f"<{modifier}-comma>", lambda a: self.preferences())
         self.menubar.add_cascade(label="File", menu=self.file)  
 
         self.edit = Menu(self.menubar, tearoff=0)  
@@ -96,8 +109,10 @@ class Application(ttk.Frame):
         self.master.bind_all(f"<{modifier}-r>", lambda a: self.reset_completed())
         self.menubar.add_cascade(label="Questions", menu=self.questions_menu)
 
-        self.help = Menu(self.menubar, tearoff=0)  
-        self.help.add_command(label="About", command=self.about)  
+        self.help = Menu(self.menubar, tearoff=0)
+        if not sys.platform == "darwin":
+            self.help.add_command(label="About", command=self.about)
+        self.help.add_command(label="Get help online...", command=self.help_menu)
         self.menubar.add_cascade(label="Help", menu=self.help) 
 
         self.master.config(menu=self.menubar)
@@ -107,23 +122,27 @@ class Application(ttk.Frame):
         self.question_frame1.pack(fill="both", expand=True)
 
         self.question_label = ttk.Label(self.question_frame1, text="Question: 0")
-        self.question_label.pack(side="left", padx=5, pady=5, fill="x", expand=True)
+        self.question_label.pack(side="left", padx=5, pady=2, fill="x", expand=True)
         self.total_label = ttk.Label(self.question_frame1, text="Total: 0")
-        self.total_label.pack(side="right", padx=5, pady=5, fill="x", expand=True)
+        self.total_label.pack(side="right", padx=5, pady=2, fill="x", expand=True)
 
         self.question_frame2 = ttk.Frame(self)
         self.question_frame2.pack(fill="both", expand=True)
 
         self.remaining_label = ttk.Label(self.question_frame2, text="Remaining: 0")
-        self.remaining_label.pack(side="left", padx=5, pady=5, fill="x", expand=True)
+        self.remaining_label.pack(side="left", padx=5, pady=2, fill="x", expand=True)
         self.completed_label = ttk.Label(self.question_frame2, text="Completed: 0")
-        self.completed_label.pack(side="left", padx=5, pady=5, fill="x", expand=True)
+        self.completed_label.pack(side="left", padx=5, pady=2, fill="x", expand=True)
+
+        self.progress_var = IntVar()
+        self.progress_bar = ttk.Progressbar(self, orient="horizontal", mode="determinate", length=200, variable=self.progress_var)
+        self.progress_bar.pack(padx=5, pady=0, fill="x", expand=True)
 
         self.button_frame1 = ttk.Frame(self)
         self.button_frame1.pack(fill="x", expand=True)
 
         self.next_button = ttk.Button(self.button_frame1, text="Next", command=self.next_on_click)
-        self.next_button.pack(side="left", padx=5, pady=5, fill="x", expand=True)
+        self.next_button.pack(side="left", padx=5, pady=(0,5), fill="x", expand=True)
 
     def disable_buttons(self):
         for button in self.buttons:
@@ -177,6 +196,18 @@ class Application(ttk.Frame):
 
     def about(self):
         messagebox.showinfo("About", "This is a Question Counter")
+        self.master.focus_force()
+
+    def preferences(self):
+        messagebox.showinfo("Preferences", "Not implemented")
+        self.master.focus_force()
+
+    def help_menu(self):
+        if sys.platform == "darwin":
+            os.system('open "https://github.com/zanderp25/question-counter/docs/"')
+        else:
+            messagebox.showinfo("Help", "Mmmmmm... no.")
+        self.master.focus_force()
 
     def new_file(self):
         questions = simpledialog.askstring("New File", "Enter the numbers of the questions:")
@@ -231,6 +262,7 @@ class Application(ttk.Frame):
         self.total_label.config(text="Total: " + str(len(self.questions)))
         self.remaining_label.config(text="Remaining: " + str(len(self.questions)-len(self.completed)))
         self.completed_label.config(text="Completed: " + str(len(self.completed)))
+        self.progress_var.set(int(100*(len(self.completed)/len(self.questions))))
 
     def find_next(self):
         for question in self.questions:
