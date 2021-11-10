@@ -1,3 +1,4 @@
+<title>Question Counter</title>
 <h1 align="center">
   <br>
   <a href="https://question-counter.zanderp25.com/"><img src="https://raw.githubusercontent.com/zanderp25/question-counter/master/img/screenshot.png" alt="Question Counter" width="200"></a>
