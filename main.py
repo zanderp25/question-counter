@@ -8,6 +8,7 @@ from tkinter import ttk, messagebox, filedialog, simpledialog
 
 # TODO: Fix the divide by zero error when new file is created
 # TODO: fix the attribute error when the add question dialog is cancelled
+# TODO: If a completed question is not in questions, add it (maybe prompt?)
 # TODO: Filter duplicates
 # TODO: make about page look nicer
 #      - maybe add html viewer or something
