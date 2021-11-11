@@ -6,12 +6,14 @@ import qcount
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog, simpledialog
 
-# TODO: Add a progress bar
+# TODO: Fix the divide by zero error when new file is created
+# TODO: fix the attribute error when the add question dialog is cancelled
 # TODO: Filter duplicates
 # TODO: make about page look nicer
 #      - maybe add html viewer or something
 # TODO: Parse input with spaces before and after dashes
 # TODO: add other languages maybe
+# TODO: Check if the help screen works on Windows
 # TODO: Add error handling
 # TODO: Add SSH / Password support
 
@@ -77,7 +79,6 @@ class Application(ttk.Frame):
             self.file.add_separator()
             self.file.add_command(label="Preferences", command=self.preferences, accelerator= modifier + "+,")
             self.master.bind_all(f"<{modifier}-comma>", lambda a: self.preferences())
-            self.file.add_separator()
             self.file.add_command(label="Quit", command=self.on_quit, accelerator= modifier + "+Q")
             self.master.bind_all(f"<{modifier}-q>", lambda a: self.on_quit())
         self.menubar.add_cascade(label="File", menu=self.file)  
@@ -224,6 +225,7 @@ class Application(ttk.Frame):
             self.completed = []
             self.savefile = "\U0001f539 Untitled"
             self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
+            self.saved = False
             self.clear_history()
             self.update_labels()
             self.enable_buttons()
@@ -236,8 +238,7 @@ class Application(ttk.Frame):
                 ("All Files","*.*"),
             ),
         )
-        if not self.savefile:
-            return
+        if not self.savefile: return
         self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
         self.questions, self.completed = qcount.load(file = self.savefile)
         self.saved = True
@@ -259,6 +260,7 @@ class Application(ttk.Frame):
             defaultextension=".json",
             initialfile="Untitled.json",
         )
+        if not self.savefile: return
         qcount.save(file = self.savefile, questions = self.questions, completed = self.completed)
         self.master.title(os.path.split(self.savefile)[1] + " - Question Counter")
         self.saved = True
@@ -322,6 +324,7 @@ class Editor(ttk.Frame):
         self.master = master
         self.completed = completed
         self.root = root
+        self.master.minsize(width=200, height=240)
         self.pack(fill="both", expand=True)
         self.values = StringVar()
         if not self.completed:
@@ -345,13 +348,13 @@ class Editor(ttk.Frame):
         self.scrollbar.pack(side="right", fill="y")
         self.list.config(yscrollcommand=self.scrollbar.set)
         self.button_frame = ttk.Frame(self)
-        self.button_frame.pack(side="top", padx=5, pady=5, fill="x", expand=True)
+        self.button_frame.pack(side="top", padx=5, pady=5, fill="x", expand=False)
         self.add_button = ttk.Button(self.button_frame, text="Add", command=self.add)
         self.add_button.pack(side="left", fill="x", expand=True)
         self.remove_button = ttk.Button(self.button_frame, text="Remove", command=self.remove)
         self.remove_button.pack(side="left", fill="x", expand=True)
         self.button_frame2 = ttk.Frame(self)
-        self.button_frame2.pack(side="top", padx=5, pady=5, fill="x", expand=True)
+        self.button_frame2.pack(side="top", padx=5, pady=5, fill="x", expand=False)
         self.cancel_button = ttk.Button(self.button_frame2, text="Cancel", command=self.cancel)
         self.cancel_button.pack(side="left", fill="x", expand=True)
         self.ok_button = ttk.Button(self.button_frame2, text="OK", command=self.ok)
