@@ -195,28 +195,26 @@ class Application(ttk.Frame):
         self.update_labels()
         self.master.focus_force()
     def edit_questions(self):
-        self.toplevel = Editor(master=Toplevel(), root = self, completed=False)
+        Editor(master=Toplevel(), root = self, completed=False)
     def edit_completed(self):
-        self.toplevel = Editor(master=Toplevel(), root = self, completed=True)
+        Editor(master=Toplevel(), root = self, completed=True)
 
     def about(self):
-        messagebox.showinfo("About", "This is a Question Counter")
-        self.master.focus_force()
+        AboutScreen(master=Toplevel(), root = self)
 
     def preferences(self):
-        messagebox.showinfo("Preferences", "Not implemented")
-        self.master.focus_force()
+        Preferences(master=Toplevel(), root = self)
 
     def help_menu(self):
-        link = "https://github.com/zanderp25/question-counter/blob/master/README.md"
+        link = "https://question-counter.zanderp25.com/"
         if sys.platform == "darwin":
             os.system(f'open "{link}"')
         elif sys.platform == "win32":
-            os.system(f'start "" "{link}"') # not sure if this works
+            os.system(f'start "" "{link}"')
         elif sys.platform == "linux":
             os.system(f'xdg-open "{link}"')
         else:
-            messagebox.showinfo("Help", "Unsupported platform detected.")
+            messagebox.showerror("Error", "Unsupported platform detected.")
         self.master.focus_force()
 
     def new_file(self):
@@ -387,6 +385,45 @@ class Editor(ttk.Frame):
         self.root.add_undo()
         self.root.master.focus_force()
         self.master.destroy()
+
+class AboutScreen(ttk.Frame):
+    def __init__(self, master:Toplevel, root:Application):
+        super().__init__(master)
+        self.master = master
+        self.root = root
+        self.master.geometry("400x200")
+        self.pack(fill="both", expand=True)
+        self.create_widgets()
+    def create_widgets(self):
+        self.label = ttk.Label(self, text="About")
+        self.label.pack(side="top", fill="both", expand=True)
+        self.label2 = ttk.Label(
+            self, 
+            text="This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.", 
+            wraplength=400)
+        self.label2.pack(side="top", fill="both", expand=True)
+        self.button = ttk.Button(self, text="OK", command=self.ok)
+        self.button.pack(side="bottom", fill="x", expand=True)
+    def ok(self):
+        self.master.destroy()
+        self.root.master.focus_force()
+
+class Preferences(ttk.Frame):
+    def __init__(self, master:Toplevel, root:Application):
+        super().__init__(master)
+        self.master = master
+        self.root = root
+        self.master.geometry("400x200")
+        self.pack(fill="both", expand=True)
+        self.create_widgets()
+    def create_widgets(self):
+        self.label = ttk.Label(self, text="Preferences")
+        self.label.pack(side="top", fill="both", expand=True)
+        self.button = ttk.Button(self, text="OK", command=self.ok)
+        self.button.pack(side="bottom", fill="x", expand=True)
+    def ok(self):
+        self.master.destroy()
+        self.root.master.focus_force()
 
 app = Application(master=Tk())
 app.mainloop()
