@@ -24,7 +24,7 @@ This program is a simple question counter. It will count the number of questions
 
 ## How To Use
 
-This app is unfinished so im not gonna write anything here :smiling_imp:
+This app is unfinished so im not gonna write anything here 😈
 
 ## Download
 
