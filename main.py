@@ -63,7 +63,7 @@ class Application(ttk.Frame):
         if sys.platform == "darwin":
             self.appmenu = Menu(self.menubar, name='apple')
             self.menubar.add_cascade(menu=self.appmenu)
-            self.appmenu.add_command(label='About My Application', command=self.about)
+            self.appmenu.add_command(label='About Question Counter', command=self.about)
 
         self.file = Menu(self.menubar, tearoff=0)  
         self.file.add_command(label="New", command=self.new_file, accelerator= modifier + "+N")
