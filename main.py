@@ -208,15 +208,15 @@ class Application(ttk.Frame):
         self.master.focus_force()
 
     def help_menu(self):
-        link = "https://github.com/zanderp25/question-counter/blob/main/README.md"
+        link = "https://github.com/zanderp25/question-counter/blob/master/README.md"
         if sys.platform == "darwin":
             os.system(f'open "{link}"')
-        if sys.platform == "win32":
-            os.system(f'start "{link}"') # not sure if this works
-        if sys.platform == "linux":
+        elif sys.platform == "win32":
+            os.system(f'start "" "{link}"') # not sure if this works
+        elif sys.platform == "linux":
             os.system(f'xdg-open "{link}"')
         else:
-            messagebox.showinfo("Help", "Mmmmmm... no.")
+            messagebox.showinfo("Help", "Unsupported platform detected.")
         self.master.focus_force()
 
     def new_file(self):
