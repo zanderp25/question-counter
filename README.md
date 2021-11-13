@@ -28,4 +28,4 @@ This app is unfinished so im not gonna write anything here 😈
 
 ## Download
 
-You can [download](https://github.com/zanderp25/question-counter/releases/) the latest installable version of Question for Windows, macOS and Linux. (Soon, not yet)
+You can [download](https://github.com/zanderp25/question-counter/releases/) the latest installable version of Question Counter for Windows, macOS and Linux. (Soon, not yet)
