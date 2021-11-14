@@ -29,6 +29,8 @@ class Application(ttk.Frame):
         self.master.protocol("WM_DELETE_WINDOW", self.on_quit)
         if sys.platform == "darwin":
             self.master.createcommand('tk::mac::Quit', self.on_quit)
+        self.supported_languages = ["en"]
+        self.language = "en"
         self.question = None
         self.questions = []
         self.completed = []
@@ -317,6 +319,9 @@ class Application(ttk.Frame):
         self.edit.entryconfig("Undo", state=DISABLED)
         self.edit.entryconfig("Redo", state=DISABLED)
 
+    def update_language(self):
+        ...
+
 class Editor(ttk.Frame):
     def __init__(self, master:Toplevel, root:Application, completed:bool):
         super().__init__(master)
@@ -417,11 +422,24 @@ class Preferences(ttk.Frame):
         self.pack(fill="both", expand=True)
         self.create_widgets()
     def create_widgets(self):
-        self.label = ttk.Label(self, text="Preferences")
-        self.label.pack(side="top", fill="both", expand=True)
-        self.button = ttk.Button(self, text="OK", command=self.ok)
-        self.button.pack(side="bottom", fill="x", expand=True)
-    def ok(self):
+        self.language_frame = ttk.Frame(self)
+        self.language_frame.pack(side="top", fill="both", expand=True)
+        self.language_label = ttk.Label(self.language_frame, text="Language:")
+        self.language_label.pack(side="left", fill="x", expand=True)
+        self.language_value = StringVar()
+        self.language_value.set(self.root.language)
+        self.language_menu = ttk.OptionMenu(self.language_frame, self.language_value, *self.root.supported_languages)
+        self.language_menu.pack(side="left", fill="x", expand=True)
+        self.button_frame = ttk.Frame(self)
+        self.button_frame.pack(side="top", padx=5, pady=5, fill="x", expand=False)
+        self.cancel_button = ttk.Button(self.button_frame, text="Cancel", command=self.cancel)
+        self.cancel_button.pack(side="left", fill="x", expand=True)
+        self.button = ttk.Button(self.button_frame, text="Save", command=self.save)
+        self.button.pack(side="left", fill="x", expand=True)
+    def save(self):
+        self.root.language = self.language_value.get()
+        # save to file
+        self.root.update_language()
         self.master.destroy()
         self.root.master.focus_force()
 
