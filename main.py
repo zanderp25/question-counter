@@ -273,7 +273,10 @@ class Application(ttk.Frame):
         self.total_label.config(text="Total: " + str(len(self.questions)))
         self.remaining_label.config(text="Remaining: " + str(len(self.questions)-len(self.completed)))
         self.completed_label.config(text="Completed: " + str(len(self.completed)))
-        self.progress_var.set(int(100*(len(self.completed)/len(self.questions))))
+        try:
+            self.progress_var.set(int(100*(len(self.completed)/len(self.questions))))
+        except ZeroDivisionError:
+            self.progress_var.set(0)
 
     def find_next(self):
         for question in self.questions:
