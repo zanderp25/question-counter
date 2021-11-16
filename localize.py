@@ -184,4 +184,19 @@ localized = {
         "es": "Eliminar",
         "ja": "削除",
     },
+    "new_prompt": {
+        "en": "Enter numbers of questions:",
+        "es": "Introduzca números de preguntas:",
+        "ja": "質問の数を入力:",
+    },
+    "json_filetype": {
+        "en": "JSON File",
+        "es": "Archivo JSON",
+        "ja": "JSONファイル",
+    },
+    "all_filetype": {
+        "en": "All Files",
+        "es": "Todos los archivos",
+        "ja": "すべてのファイル",
+    },
 }

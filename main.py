@@ -7,17 +7,11 @@ from localize import localized
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog, simpledialog
 
-# TODO: Fix the divide by zero error when new file is created
-# TODO: fix the attribute error when the add question dialog is cancelled
 # TODO: If a completed question is not in questions, add it (maybe prompt?)
 # TODO: Filter duplicates
 # TODO: make about page look nicer
-#      - maybe add html viewer or something
 # TODO: Parse input with spaces before and after dashes
-# TODO: add other languages maybe
-# TODO: Check if the help screen works on Windows
 # TODO: Add error handling
-# TODO: Add SSH / Password support
 
 class Application(ttk.Frame):
     def __init__(self, master:Tk=None):
@@ -177,7 +171,9 @@ class Application(ttk.Frame):
         self.update_labels()
 
     def add_completed(self):
-        add = [*qcount.parse_input(simpledialog.askstring(localized["add_completed"][self.language],"Enter questions to add to completed: "))]
+        add = simpledialog.askstring(localized["add_completed"][self.language], localized["add_completed_prompt"][self.language])
+        if add is None: return
+        add = [*qcount.parse_input(add)]
         for item in add:
             if not item in self.completed:
                 self.completed += [item]
@@ -185,13 +181,15 @@ class Application(ttk.Frame):
         self.add_undo()
         self.master.focus_force()
     def reset_completed(self):
-        if messagebox.askyesno(localized["reset_completed"][self.language],"Are you sure you want to reset completed?"):
+        if messagebox.askyesno(localized["reset_completed"][self.language],localized["reset_completed_prompt"][self.language]):
             self.completed = []
             self.add_undo()
             self.update_labels()
         self.master.focus_force()
     def add_questions(self):
-        add = [*qcount.parse_input(simpledialog.askstring(localized["add_question"][self.language],"Enter questions to add to questions: "))]
+        add = simpledialog.askstring(localized["add_question"][self.language],localized["add_question_prompt"][self.language])
+        if add is None: return
+        add = [*qcount.parse_input(add)]
         for item in add:
             if not item in self.questions:
                 self.questions += [item]
@@ -222,7 +220,7 @@ class Application(ttk.Frame):
         self.master.focus_force()
 
     def new_file(self):
-        questions = simpledialog.askstring("New File", "Enter the numbers of the questions:")
+        questions = simpledialog.askstring(localized["new"][self.language], localized["new_prompt"][self.language])
         if questions:
             self.questions = qcount.parse_input(questions)
             self.completed = []
@@ -235,10 +233,10 @@ class Application(ttk.Frame):
     def open_file(self):
         self.savefile = filedialog.askopenfilename(
             initialdir = ".",
-            title = "Open file",
+            title = localized["open"][self.language],
             filetypes = (
-                ("JSON Files","*.json"),
-                ("All Files","*.*"),
+                (localized["json_filetype"][self.language],"*.json"),
+                (localized["all_filetype"][self.language],"*.*"),
             ),
         )
         if not self.savefile: return
