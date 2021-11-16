@@ -2,6 +2,7 @@ from io import TextIOWrapper
 import os, json, sys
 from typing import Literal, Union
 import qcount
+from localize import localized
 
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog, simpledialog
@@ -29,7 +30,7 @@ class Application(ttk.Frame):
         self.master.protocol("WM_DELETE_WINDOW", self.on_quit)
         if sys.platform == "darwin":
             self.master.createcommand('tk::mac::Quit', self.on_quit)
-        self.supported_languages = ["en"]
+        self.supported_languages = ["en", "es", "ja"]
         self.language = "en"
         self.question = None
         self.questions = []
@@ -38,6 +39,7 @@ class Application(ttk.Frame):
         self.redo_history = []
         self.savefile = None
         self.saved = True
+        # load settings from file
         self.create_menubar()
         self.create_widgets()
         self.buttons = [
@@ -47,7 +49,7 @@ class Application(ttk.Frame):
 
     def on_quit(self) -> None:
         if not self.saved:
-            e = messagebox.askyesnocancel("Quit", "Do you want to save before quitting?")
+            e = messagebox.askyesnocancel(localized["quit"], localized["unsaved_changes_quit"][self.language])
             if e == True:
                 self.save_file()
                 self.master.destroy()
@@ -65,62 +67,62 @@ class Application(ttk.Frame):
         if sys.platform == "darwin":
             self.appmenu = Menu(self.menubar, name='apple')
             self.menubar.add_cascade(menu=self.appmenu)
-            self.appmenu.add_command(label='About Question Counter', command=self.about)
+            self.appmenu.add_command(label=localized["about"][self.language], command=self.about)
 
         self.file = Menu(self.menubar, tearoff=0)  
-        self.file.add_command(label="New", command=self.new_file, accelerator= modifier + "+N")
+        self.file.add_command(label=localized["new"][self.language], command=self.new_file, accelerator= modifier + "+N")
         self.master.bind_all(f"<{modifier}-n>", lambda a: self.new_file())
-        self.file.add_command(label="Open", command=self.open_file, accelerator= modifier + "+O")
+        self.file.add_command(label=localized["open"][self.language], command=self.open_file, accelerator= modifier + "+O")
         self.master.bind_all(f"<{modifier}-o>", lambda a: self.open_file())
-        self.file.add_command(label="Save", command=self.save_file, accelerator= modifier + "+S")
+        self.file.add_command(label=localized["save"][self.language], command=self.save_file, accelerator= modifier + "+S")
         self.master.bind_all(f"<{modifier}-s>", lambda a: self.save_file())
-        self.file.add_command(label="Save as", command=self.save_as_file, accelerator= modifier + "+Shift+S")
+        self.file.add_command(label=localized["save_as"][self.language], command=self.save_as_file, accelerator= modifier + "+Shift+S")
         self.master.bind_all(f"<{modifier}-S>", lambda a: self.save_as_file())
         if sys.platform == "darwin":
             self.master.createcommand('tk::mac::ShowPreferences', self.preferences)
         else:
             self.file.add_separator()
-            self.file.add_command(label="Preferences", command=self.preferences, accelerator= modifier + "+,")
+            self.file.add_command(label=localized["preferences"][self.language], command=self.preferences, accelerator= modifier + "+,")
             self.master.bind_all(f"<{modifier}-comma>", lambda a: self.preferences())
-            self.file.add_command(label="Quit", command=self.on_quit, accelerator= modifier + "+Q")
+            self.file.add_command(label=localized["quit"][self.language], command=self.on_quit, accelerator= modifier + "+Q")
             self.master.bind_all(f"<{modifier}-q>", lambda a: self.on_quit())
-        self.menubar.add_cascade(label="File", menu=self.file)  
+        self.menubar.add_cascade(label=localized["file"][self.language], menu=self.file)  
 
         self.edit = Menu(self.menubar, tearoff=0)  
-        self.edit.add_command(label="Undo", command=self.undo_action, accelerator= modifier + "+Z", state=DISABLED)
+        self.edit.add_command(label=localized["undo"][self.language], command=self.undo_action, accelerator= modifier + "+Z", state=DISABLED)
         self.master.bind_all(f"<{modifier}-z>", lambda a: self.undo_action())
-        self.edit.add_command(label="Redo", command=self.redo_action, accelerator= modifier + "+Y", state=DISABLED)
+        self.edit.add_command(label=localized["redo"][self.language], command=self.redo_action, accelerator= modifier + "+Y", state=DISABLED)
         self.master.bind_all(f"<{modifier}-y>", lambda a: self.redo_action())
         self.edit.add_separator()     
-        self.edit.add_command(label="Cut", accelerator= modifier + "+X")
-        self.edit.add_command(label="Copy", accelerator= modifier + "+C")
-        self.edit.add_command(label="Paste", accelerator= modifier + "+V")
-        self.edit.add_command(label="Select All", accelerator= modifier + "+A")
-        self.menubar.add_cascade(label="Edit", menu=self.edit)  
+        self.edit.add_command(label=localized["cut"][self.language], accelerator= modifier + "+X")
+        self.edit.add_command(label=localized["copy"][self.language], accelerator= modifier + "+C")
+        self.edit.add_command(label=localized["paste"][self.language], accelerator= modifier + "+V")
+        self.edit.add_command(label=localized["select_all"][self.language], accelerator= modifier + "+A")
+        self.menubar.add_cascade(label=localized["edit"][self.language], menu=self.edit)  
 
         self.questions_menu = Menu(self.menubar, tearoff=0)
-        self.questions_menu.add_command(label="Next Question", command=self.next_on_click, accelerator= "Return" if sys.platform == "darwin" else "Enter")
+        self.questions_menu.add_command(label=localized["next_question"][self.language], command=self.next_on_click, accelerator= "Return" if sys.platform == "darwin" else "Enter")
         self.master.bind_all("<Return>", lambda a: self.next_on_click())
         self.questions_menu.add_separator()
-        self.questions_menu.add_command(label="Add Questions", command=self.add_questions, accelerator= modifier + "+M")
+        self.questions_menu.add_command(label=localized["add_question"][self.language], command=self.add_questions, accelerator= modifier + "+M")
         self.master.bind_all(f"<{modifier}-m>", lambda a: self.add_questions())
-        self.questions_menu.add_command(label="Edit Questions", command=self.edit_questions, accelerator= modifier + "+E")
+        self.questions_menu.add_command(label=localized["edit_questions"][self.language], command=self.edit_questions, accelerator= modifier + "+E")
         self.master.bind_all(f"<{modifier}-e>", lambda a: self.edit_questions())
         self.questions_menu.add_separator()
-        self.questions_menu.add_command(label="Add Completed", command=self.add_completed, accelerator= modifier + "+Shift+M")
+        self.questions_menu.add_command(label=localized["add_completed"][self.language], command=self.add_completed, accelerator= modifier + "+Shift+M")
         self.master.bind_all(f"<{modifier}-Shift-m>", lambda a: self.add_completed())
-        self.questions_menu.add_command(label="Edit Completed", command=self.edit_completed, accelerator= modifier + "+Shift+E")
+        self.questions_menu.add_command(label=localized["edit_completed"][self.language], command=self.edit_completed, accelerator= modifier + "+Shift+E")
         self.master.bind_all(f"<{modifier}-Shift-e>", lambda a: self.edit_completed())
         self.questions_menu.add_separator()
-        self.questions_menu.add_command(label="Reset Completed", command=self.reset_completed, accelerator= modifier + "+R")
+        self.questions_menu.add_command(label=localized["reset_completed"][self.language], command=self.reset_completed, accelerator= modifier + "+R")
         self.master.bind_all(f"<{modifier}-r>", lambda a: self.reset_completed())
-        self.menubar.add_cascade(label="Questions", menu=self.questions_menu)
+        self.menubar.add_cascade(label=localized["questions"][self.language], menu=self.questions_menu)
 
         self.help = Menu(self.menubar, tearoff=0)
         if not sys.platform == "darwin":
-            self.help.add_command(label="About", command=self.about)
-        self.help.add_command(label="Get help online...", command=self.help_menu)
-        self.menubar.add_cascade(label="Help", menu=self.help) 
+            self.help.add_command(label=localized["about"][self.language], command=self.about)
+        self.help.add_command(label=localized["get_help_online"][self.language], command=self.help_menu)
+        self.menubar.add_cascade(label=localized["help"][self.language], menu=self.help) 
 
         self.master.config(menu=self.menubar)
 
@@ -128,17 +130,17 @@ class Application(ttk.Frame):
         self.question_frame1 = ttk.Frame(self)
         self.question_frame1.pack(fill="both", expand=True)
 
-        self.question_label = ttk.Label(self.question_frame1, text="Question: 0")
+        self.question_label = ttk.Label(self.question_frame1, text=f"{localized['question'][self.language]}: 0")
         self.question_label.pack(side="left", padx=5, pady=2, fill="x", expand=True)
-        self.total_label = ttk.Label(self.question_frame1, text="Total: 0")
+        self.total_label = ttk.Label(self.question_frame1, text=f"{localized['total'][self.language]}: 0")
         self.total_label.pack(side="right", padx=5, pady=2, fill="x", expand=True)
 
         self.question_frame2 = ttk.Frame(self)
         self.question_frame2.pack(fill="both", expand=True)
 
-        self.remaining_label = ttk.Label(self.question_frame2, text="Remaining: 0")
+        self.remaining_label = ttk.Label(self.question_frame2, text=f"{localized['remaining'][self.language]}: 0")
         self.remaining_label.pack(side="left", padx=5, pady=2, fill="x", expand=True)
-        self.completed_label = ttk.Label(self.question_frame2, text="Completed: 0")
+        self.completed_label = ttk.Label(self.question_frame2, text=f"{localized['completed'][self.language]}: 0")
         self.completed_label.pack(side="left", padx=5, pady=2, fill="x", expand=True)
 
         self.progress_var = IntVar()
@@ -148,21 +150,21 @@ class Application(ttk.Frame):
         self.button_frame1 = ttk.Frame(self)
         self.button_frame1.pack(fill="x", expand=True)
 
-        self.next_button = ttk.Button(self.button_frame1, text="Next", command=self.next_on_click)
+        self.next_button = ttk.Button(self.button_frame1, text=localized["next_question"][self.language], command=self.next_on_click)
         self.next_button.pack(side="left", padx=5, pady=(0,5), fill="x", expand=True)
 
     def disable_buttons(self):
         for button in self.buttons:
             button.config(state=DISABLED)
-        self.menubar.entryconfig("Questions", state=DISABLED)
-        self.file.entryconfig("Save", state=DISABLED)
-        self.file.entryconfig("Save as", state=DISABLED)
+        self.menubar.entryconfig(localized["questions"][self.language], state=DISABLED)
+        self.file.entryconfig(localized["save"][self.language], state=DISABLED)
+        self.file.entryconfig(localized["save_as"][self.language], state=DISABLED)
     def enable_buttons(self):
         for button in self.buttons:
             button.config(state=NORMAL)
-        self.menubar.entryconfig("Questions", state=NORMAL)
-        self.file.entryconfig("Save", state=NORMAL)
-        self.file.entryconfig("Save as", state=NORMAL)
+        self.menubar.entryconfig(localized["questions"][self.language], state=NORMAL)
+        self.file.entryconfig(localized["save"][self.language], state=NORMAL)
+        self.file.entryconfig(localized["save_as"][self.language], state=NORMAL)
 
     def next_on_click(self):
         self.add_undo()
@@ -175,7 +177,7 @@ class Application(ttk.Frame):
         self.update_labels()
 
     def add_completed(self):
-        add = [*qcount.parse_input(simpledialog.askstring("Add Completed","Enter questions to add to completed: "))]
+        add = [*qcount.parse_input(simpledialog.askstring(localized["add_completed"][self.language],"Enter questions to add to completed: "))]
         for item in add:
             if not item in self.completed:
                 self.completed += [item]
@@ -183,13 +185,13 @@ class Application(ttk.Frame):
         self.add_undo()
         self.master.focus_force()
     def reset_completed(self):
-        if messagebox.askyesno("Reset Completed","Are you sure you want to reset completed?"):
+        if messagebox.askyesno(localized["reset_completed"][self.language],"Are you sure you want to reset completed?"):
             self.completed = []
             self.add_undo()
             self.update_labels()
         self.master.focus_force()
     def add_questions(self):
-        add = [*qcount.parse_input(simpledialog.askstring("Add Questions","Enter questions to add to questions: "))]
+        add = [*qcount.parse_input(simpledialog.askstring(localized["add_question"][self.language],"Enter questions to add to questions: "))]
         for item in add:
             if not item in self.questions:
                 self.questions += [item]
@@ -208,7 +210,7 @@ class Application(ttk.Frame):
         Preferences(master=Toplevel(), root = self)
 
     def help_menu(self):
-        link = "https://question-counter.zanderp25.com/"
+        link = f"https://question-counter.zanderp25.com/docs/{self.language}/"
         if sys.platform == "darwin":
             os.system(f'open "{link}"')
         elif sys.platform == "win32":
@@ -255,7 +257,7 @@ class Application(ttk.Frame):
         self.saved = True
     def save_as_file(self):
         self.savefile = filedialog.asksaveasfilename(
-            title="Save As",
+            title=localized["save_as"][self.language],
             initialdir=".", 
             filetypes=(("JSON Files","*.json"),("All Files","*.*")), 
             defaultextension=".json",
@@ -269,10 +271,10 @@ class Application(ttk.Frame):
 
     def update_labels(self):
         self.find_next()
-        self.question_label.config(text="Question: " + str(self.question))
-        self.total_label.config(text="Total: " + str(len(self.questions)))
-        self.remaining_label.config(text="Remaining: " + str(len(self.questions)-len(self.completed)))
-        self.completed_label.config(text="Completed: " + str(len(self.completed)))
+        self.question_label.config(text=localized["question"][self.language]+ ": " + str(self.question))
+        self.total_label.config(text=localized["total"][self.language] + ": " + str(len(self.questions)))
+        self.remaining_label.config(text=localized["remaining"][self.language] + ": " + str(len(self.questions)-len(self.completed)))
+        self.completed_label.config(text=localized["completed"][self.language] + ": " + str(len(self.completed)))
         try:
             self.progress_var.set(int(100*(len(self.completed)/len(self.questions))))
         except ZeroDivisionError:
@@ -289,41 +291,71 @@ class Application(ttk.Frame):
     def undo_action(self):
         if len(self.undo_history) > 0:
             self.redo_history += [{"questions":list(self.questions), "completed":list(self.completed)}]
-            self.edit.entryconfig("Redo", state=NORMAL)
+            self.edit.entryconfig(localized["redo"][self.language], state=NORMAL)
             action = self.undo_history[-1]
             self.completed = action["completed"]
             self.questions = action["questions"]
         self.undo_history = self.undo_history[:-1]
         if len(self.undo_history) == 0:
-            self.edit.entryconfig("Undo", state=DISABLED)
+            self.edit.entryconfig(localized["undo"][self.language], state=DISABLED)
         self.update_labels()
     def redo_action(self):
         if len(self.redo_history) > 0:
             self.undo_history += [{"questions":list(self.questions), "completed":list(self.completed)}]
-            self.edit.entryconfig("Undo", state=NORMAL)
+            self.edit.entryconfig(localized["undo"][self.language], state=NORMAL)
             action = self.redo_history[-1]
             self.completed = action["completed"]
             self.questions = action["questions"]
         self.redo_history = self.redo_history[:-1]
         if len(self.redo_history) == 0:
-            self.edit.entryconfig("Redo", state=DISABLED)
+            self.edit.entryconfig(localized["redo"][self.language], state=DISABLED)
         self.update_labels()
 
     def add_undo(self):
         self.undo_history += [{"questions":list(self.questions), "completed":list(self.completed)}]
-        self.edit.entryconfig("Undo", state=NORMAL)
         self.redo_history = []
-        self.edit.entryconfig("Redo", state=DISABLED)
+        self.edit.entryconfig(localized["undo"][self.language], state=NORMAL)
+        self.edit.entryconfig(localized["redo"][self.language], state=DISABLED)
         self.saved = False
 
     def clear_history(self):
         self.undo_history = []
         self.redo_history = []
-        self.edit.entryconfig("Undo", state=DISABLED)
-        self.edit.entryconfig("Redo", state=DISABLED)
+        self.edit.entryconfig(localized["undo"][self.language], state=DISABLED)
+        self.edit.entryconfig(localized["redo"][self.language], state=DISABLED)
 
-    def update_language(self):
-        ...
+    def update_language(self, new_lang):
+        self.menubar.entryconfig(localized["file"][self.language], label=localized["file"][new_lang])
+        self.menubar.entryconfig(localized["edit"][self.language], label=localized["edit"][new_lang])
+        self.menubar.entryconfig(localized["questions"][self.language], label=localized["questions"][new_lang])
+        self.menubar.entryconfig(localized["help"][self.language], label=localized["help"][new_lang])
+        self.file.entryconfig(localized["new"][self.language], label=localized["new"][new_lang])
+        self.file.entryconfig(localized["open"][self.language], label=localized["open"][new_lang])
+        self.file.entryconfig(localized["save"][self.language], label=localized["save"][new_lang])
+        self.file.entryconfig(localized["save_as"][self.language], label=localized["save_as"][new_lang])
+        self.edit.entryconfig(localized["undo"][self.language], label=localized["undo"][new_lang])
+        self.edit.entryconfig(localized["redo"][self.language], label=localized["redo"][new_lang])
+        self.edit.entryconfig(localized["cut"][self.language], label=localized["cut"][new_lang])
+        self.edit.entryconfig(localized["copy"][self.language], label=localized["copy"][new_lang])
+        self.edit.entryconfig(localized["paste"][self.language], label=localized["paste"][new_lang])
+        self.edit.entryconfig(localized["select_all"][self.language], label=localized["select_all"][new_lang])
+        self.questions_menu.entryconfig(localized["next_question"][self.language], label=localized["next_question"][new_lang])
+        self.questions_menu.entryconfig(localized["add_question"][self.language], label=localized["add_question"][new_lang])
+        self.questions_menu.entryconfig(localized["edit_questions"][self.language], label=localized["edit_questions"][new_lang])
+        self.questions_menu.entryconfig(localized["add_completed"][self.language], label=localized["add_completed"][new_lang])
+        self.questions_menu.entryconfig(localized["edit_completed"][self.language], label=localized["edit_completed"][new_lang])
+        self.questions_menu.entryconfig(localized["reset_completed"][self.language], label=localized["reset_completed"][new_lang])
+        self.help.entryconfig(localized["get_help_online"][self.language], label=localized["get_help_online"][new_lang])
+        if sys.platform == "darwin":
+            self.appmenu.entryconfig(localized["about"][self.language], label=localized["about"][new_lang])
+        else:
+            self.help.entryconfig(localized["about"][self.language], label=localized["about"][new_lang])
+            self.file.entryconfig(localized["preferences"][self.language], label=localized["preferences"][new_lang])
+            self.file.entryconfig(localized["quit"][self.language], label=localized["quit"][new_lang])
+        self.next_button.config(text=localized["next_question"][new_lang])
+        self.language = new_lang
+        self.update_labels()
+        self.master.focus_force()
 
 class Editor(ttk.Frame):
     def __init__(self, master:Toplevel, root:Application, completed:bool):
@@ -336,10 +368,10 @@ class Editor(ttk.Frame):
         self.values = StringVar()
         if not self.completed:
             val = self.root.questions
-            self.master.title("Edit Questions")
+            self.master.title(localized["edit_questions"][self.root.language])
         else:
             val = self.root.completed
-            self.master.title("Edit Completed")
+            self.master.title(localized["edit_completed"][self.root.language])
         val.sort()
         self.values.set("\n".join([str(e) for e in val]))
         self.oldcount = self.root.questions if not self.completed else self.root.completed
@@ -356,20 +388,20 @@ class Editor(ttk.Frame):
         self.list.config(yscrollcommand=self.scrollbar.set)
         self.button_frame = ttk.Frame(self)
         self.button_frame.pack(side="top", padx=5, pady=5, fill="x", expand=False)
-        self.add_button = ttk.Button(self.button_frame, text="Add", command=self.add)
+        self.add_button = ttk.Button(self.button_frame, text=localized["add"][self.root.language], command=self.add)
         self.add_button.pack(side="left", fill="x", expand=True)
-        self.remove_button = ttk.Button(self.button_frame, text="Remove", command=self.remove)
+        self.remove_button = ttk.Button(self.button_frame, text=localized["remove"][self.root.language], command=self.remove)
         self.remove_button.pack(side="left", fill="x", expand=True)
         self.button_frame2 = ttk.Frame(self)
         self.button_frame2.pack(side="top", padx=5, pady=5, fill="x", expand=False)
-        self.cancel_button = ttk.Button(self.button_frame2, text="Cancel", command=self.cancel)
+        self.cancel_button = ttk.Button(self.button_frame2, text=localized["cancel"][self.root.language], command=self.cancel)
         self.cancel_button.pack(side="left", fill="x", expand=True)
-        self.ok_button = ttk.Button(self.button_frame2, text="OK", command=self.ok)
+        self.ok_button = ttk.Button(self.button_frame2, text=localized["ok"][self.root.language], command=self.ok)
         self.ok_button.pack(side="left", fill="x", expand=True)
 
     def add(self):
         nlist = (list(eval(self.values.get())) if len(self.values.get()) > 0 else [])
-        add = [*qcount.parse_input(simpledialog.askstring("Add Questions","Enter questions to add to questions: "))]
+        add = [*qcount.parse_input(simpledialog.askstring(localized["add_question"][self.language], localized[f"add_{'completed' if self.completed else 'question'}_prompt"][self.root.language]))]
         for item in add:
             if not item in nlist:
                 nlist += [item]
@@ -400,17 +432,18 @@ class AboutScreen(ttk.Frame):
         self.master = master
         self.root = root
         self.master.geometry("400x200")
+        self.master.title(localized["about"][self.root.language])
         self.pack(fill="both", expand=True)
         self.create_widgets()
     def create_widgets(self):
-        self.label = ttk.Label(self, text="About")
+        self.label = ttk.Label(self, text=localized["about"][self.root.language])
         self.label.pack(side="top", fill="both", expand=True)
         self.label2 = ttk.Label(
             self, 
             text="This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.", 
             wraplength=400)
         self.label2.pack(side="top", fill="both", expand=True)
-        self.button = ttk.Button(self, text="OK", command=self.ok)
+        self.button = ttk.Button(self, text=localized["ok"][self.root.language], command=self.ok)
         self.button.pack(side="bottom", fill="x", expand=True)
     def ok(self):
         self.master.destroy()
@@ -427,22 +460,24 @@ class Preferences(ttk.Frame):
     def create_widgets(self):
         self.language_frame = ttk.Frame(self)
         self.language_frame.pack(side="top", fill="both", expand=True)
-        self.language_label = ttk.Label(self.language_frame, text="Language:")
+        self.language_label = ttk.Label(self.language_frame, text=f"{localized['language'][self.root.language]}:")
         self.language_label.pack(side="left", fill="x", expand=True)
         self.language_value = StringVar()
         self.language_value.set(self.root.language)
-        self.language_menu = ttk.OptionMenu(self.language_frame, self.language_value, *self.root.supported_languages)
+        self.language_menu = ttk.OptionMenu(self.language_frame, self.language_value, self.root.language, *self.root.supported_languages)
         self.language_menu.pack(side="left", fill="x", expand=True)
         self.button_frame = ttk.Frame(self)
-        self.button_frame.pack(side="top", padx=5, pady=5, fill="x", expand=False)
-        self.cancel_button = ttk.Button(self.button_frame, text="Cancel", command=self.cancel)
+        self.button_frame.pack(side="bottom", padx=5, pady=5, fill="x", expand=False)
+        self.cancel_button = ttk.Button(self.button_frame, text=localized["cancel"][self.root.language], command=self.cancel)
         self.cancel_button.pack(side="left", fill="x", expand=True)
-        self.button = ttk.Button(self.button_frame, text="Save", command=self.save)
+        self.button = ttk.Button(self.button_frame, text=localized["save"][self.root.language], command=self.save)
         self.button.pack(side="left", fill="x", expand=True)
     def save(self):
-        self.root.language = self.language_value.get()
         # save to file
-        self.root.update_language()
+        self.root.update_language(self.language_value.get())
+        self.master.destroy()
+        self.root.master.focus_force()
+    def cancel(self):
         self.master.destroy()
         self.root.master.focus_force()
 
