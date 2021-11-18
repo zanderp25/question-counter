@@ -399,7 +399,7 @@ class Editor(ttk.Frame):
 
     def add(self):
         nlist = (list(eval(self.values.get())) if len(self.values.get()) > 0 else [])
-        add = [*qcount.parse_input(simpledialog.askstring(localized["add_question"][self.language], localized[f"add_{'completed' if self.completed else 'question'}_prompt"][self.root.language]))]
+        add = [*qcount.parse_input(simpledialog.askstring(localized["add_question"][self.root.language], localized[f"add_{'completed' if self.completed else 'question'}_prompt"][self.root.language]))]
         for item in add:
             if not item in nlist:
                 nlist += [item]
