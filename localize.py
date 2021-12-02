@@ -165,9 +165,9 @@ localized = {
         "ja": "追加する完了を入力:",
     },
     "reset_completed_prompt": {
-        "en": "Enter completed to reset:",
-        "es": "Introduzca completado a reiniciar:",
-        "ja": "リセットする完了を入力:",
+        "en": "Are you sure you want to reset completed?",
+        "es": "¿Está seguro de que quiere reiniciar completado?",
+        "ja": "完了をリセットしますか？",
     },
     "language": {
         "en": "Language",
