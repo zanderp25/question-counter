@@ -1,11 +1,12 @@
-from io import TextIOWrapper
-import os, json, sys
-from typing import Literal, Union
+import os, sys, locale
 import qcount
 from localize import localized
 
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog, simpledialog
+
+if sys.platform == "darwin":
+    import PyTouchBar
 
 # TODO: If a completed question is not in questions, add it (maybe prompt?)
 # TODO: Filter duplicates
@@ -26,6 +27,14 @@ class Application(ttk.Frame):
             self.master.createcommand('tk::mac::Quit', self.on_quit)
         self.supported_languages = ["en", "es", "ja"]
         self.language = "en"
+        if locale.getdefaultlocale()[0] is not None:
+            if locale.getdefaultlocale()[0][:2] in self.supported_languages:
+                self.language = locale.getdefaultlocale()[0][:2]
+                print(f"Language set to {self.language}")
+            else:
+                print(f"Language {locale.getdefaultlocale()[0][:2]} not supported")
+        else:
+            print("Warning: Could not determine language.")
         self.question = None
         self.questions = []
         self.completed = []
@@ -36,6 +45,8 @@ class Application(ttk.Frame):
         # load settings from file
         self.create_menubar()
         self.create_widgets()
+        if sys.platform == "darwin":
+            self.create_touchbar()
         self.buttons = [
             self.next_button
         ]
@@ -119,6 +130,13 @@ class Application(ttk.Frame):
         self.menubar.add_cascade(label=localized["help"][self.language], menu=self.help) 
 
         self.master.config(menu=self.menubar)
+
+    def create_touchbar(self):
+        PyTouchBar.prepare_tk_windows(self.master)
+        self.touchbar_items = []
+        self.touchbar_next = PyTouchBar.TouchBarItems.Button(title = localized["next_question"][self.language], action = lambda a: self.next_on_click())
+        self.touchbar_items += [self.touchbar_next]
+        PyTouchBar.set_touchbar(self.touchbar_items)
 
     def create_widgets(self) -> None:
         self.question_frame1 = ttk.Frame(self)
@@ -323,29 +341,18 @@ class Application(ttk.Frame):
         self.edit.entryconfig(localized["redo"][self.language], state=DISABLED)
 
     def update_language(self, new_lang):
-        self.menubar.entryconfig(localized["file"][self.language], label=localized["file"][new_lang])
-        self.menubar.entryconfig(localized["edit"][self.language], label=localized["edit"][new_lang])
-        self.menubar.entryconfig(localized["questions"][self.language], label=localized["questions"][new_lang])
-        self.menubar.entryconfig(localized["help"][self.language], label=localized["help"][new_lang])
-        self.file.entryconfig(localized["new"][self.language], label=localized["new"][new_lang])
-        self.file.entryconfig(localized["open"][self.language], label=localized["open"][new_lang])
-        self.file.entryconfig(localized["save"][self.language], label=localized["save"][new_lang])
-        self.file.entryconfig(localized["save_as"][self.language], label=localized["save_as"][new_lang])
-        self.edit.entryconfig(localized["undo"][self.language], label=localized["undo"][new_lang])
-        self.edit.entryconfig(localized["redo"][self.language], label=localized["redo"][new_lang])
-        self.edit.entryconfig(localized["cut"][self.language], label=localized["cut"][new_lang])
-        self.edit.entryconfig(localized["copy"][self.language], label=localized["copy"][new_lang])
-        self.edit.entryconfig(localized["paste"][self.language], label=localized["paste"][new_lang])
-        self.edit.entryconfig(localized["select_all"][self.language], label=localized["select_all"][new_lang])
-        self.questions_menu.entryconfig(localized["next_question"][self.language], label=localized["next_question"][new_lang])
-        self.questions_menu.entryconfig(localized["add_question"][self.language], label=localized["add_question"][new_lang])
-        self.questions_menu.entryconfig(localized["edit_questions"][self.language], label=localized["edit_questions"][new_lang])
-        self.questions_menu.entryconfig(localized["add_completed"][self.language], label=localized["add_completed"][new_lang])
-        self.questions_menu.entryconfig(localized["edit_completed"][self.language], label=localized["edit_completed"][new_lang])
-        self.questions_menu.entryconfig(localized["reset_completed"][self.language], label=localized["reset_completed"][new_lang])
+        for item in ["file", "edit", "questions", "help"]:
+            self.menubar.entryconfig(localized[item][self.language], label=localized[item][new_lang])
+        for item in ["new", "open", "save", "save_as"]:
+            self.file.entryconfig(localized[item][self.language], label=localized[item][new_lang])
+        for item in ["undo", "redo", "cut", "copy", "paste", "select_all"]:
+            self.edit.entryconfig(localized[item][self.language], label=localized[item][new_lang])
+        for item in ["next_question", "add_question", "edit_questions", "add_completed", "edit_completed", "reset_completed"]:
+            self.questions_menu.entryconfig(localized[item][self.language], label=localized[item][new_lang])
         self.help.entryconfig(localized["get_help_online"][self.language], label=localized["get_help_online"][new_lang])
         if sys.platform == "darwin":
             self.appmenu.entryconfig(localized["about"][self.language], label=localized["about"][new_lang])
+            self.touchbar_next.title = (localized["next_question"][new_lang])
         else:
             self.help.entryconfig(localized["about"][self.language], label=localized["about"][new_lang])
             self.file.entryconfig(localized["preferences"][self.language], label=localized["preferences"][new_lang])
@@ -455,6 +462,11 @@ class Preferences(ttk.Frame):
         self.master.geometry("400x200")
         self.pack(fill="both", expand=True)
         self.create_widgets()
+    languages = {
+        "en": "English",
+        "es": "Español",
+        "ja": "日本語",
+    }
     def create_widgets(self):
         self.language_frame = ttk.Frame(self)
         self.language_frame.pack(side="top", fill="both", expand=True)
@@ -462,7 +474,7 @@ class Preferences(ttk.Frame):
         self.language_label.pack(side="left", fill="x", expand=True)
         self.language_value = StringVar()
         self.language_value.set(self.root.language)
-        self.language_menu = ttk.OptionMenu(self.language_frame, self.language_value, self.root.language, *self.root.supported_languages)
+        self.language_menu = ttk.OptionMenu(self.language_frame, self.language_value, self.languages[self.root.language], *self.languages.values())
         self.language_menu.pack(side="left", fill="x", expand=True)
         self.button_frame = ttk.Frame(self)
         self.button_frame.pack(side="bottom", padx=5, pady=5, fill="x", expand=False)
@@ -472,7 +484,7 @@ class Preferences(ttk.Frame):
         self.button.pack(side="left", fill="x", expand=True)
     def save(self):
         # save to file
-        self.root.update_language(self.language_value.get())
+        self.root.update_language(list(self.languages.keys())[list(self.languages.values()).index(self.language_value.get())])
         self.master.destroy()
         self.root.master.focus_force()
     def cancel(self):
