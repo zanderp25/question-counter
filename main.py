@@ -54,7 +54,7 @@ class Application(ttk.Frame):
 
     def on_quit(self) -> None:
         if not self.saved:
-            e = messagebox.askyesnocancel(localized["quit"], localized["unsaved_changes_quit"][self.language])
+            e = messagebox.askyesnocancel(localized["quit"][self.language], localized["unsaved_changes_quit"][self.language])
             if e == True:
                 self.save_file()
                 self.master.destroy()

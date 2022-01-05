@@ -15,9 +15,9 @@ localized = {
         "ja": "終了",
     },
     "unsaved_changes_quit": {
-        "en": "There are unsaved changes. Quit anyway?",
-        "es": "Hay cambios sin guardar. ¿Salir de todos modos?",
-        "ja": "保存されていない変更があります。終了しますか？",
+        "en": "Would you like to save your changes before quitting?",
+        "es": "¿Desea guardar los cambios antes de salir?",
+        "ja": "終了する前に変更を保存しますか？",
     },
     "about": {
         "en": "About Question Counter",
