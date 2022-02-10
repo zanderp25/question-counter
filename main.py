@@ -13,6 +13,8 @@ if sys.platform == "darwin":
 # TODO: make about page look nicer
 # TODO: Parse input with spaces before and after dashes
 # TODO: Add error handling
+# TODO: Add a skip button
+# TODO: Move TODO to separate file
 
 class Application(ttk.Frame):
     def __init__(self, master:Tk=None):
